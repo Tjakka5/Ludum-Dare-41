@@ -26,8 +26,8 @@ function ShapeRenderer:draw()
       love.graphics.rotate(transform.rotation)
       love.graphics.scale(transform.scale)
 
-      --love.graphics.setLineWidth(5)
-      love.graphics.setLineWidth(5 / transform.scale)
+      --love.graphics.setLineWidth(1)
+      love.graphics.setLineWidth(1 / transform.scale)
       
       love.graphics.polygon("line", shape.points)
 

@@ -6,6 +6,8 @@ local C = require("src.components")
 local Input = Concord.system({C.controls})
 
 function Input:update(dt)
+   dt = dt * DT_MULTIPLIER
+
    local e
    for i = 1, self.pool.size do
       e = self.pool:get(i)
@@ -23,8 +25,8 @@ function Input:update(dt)
          if love.keyboard.isDown(controls.left)  then aMovement = aMovement - 1 end
          if love.keyboard.isDown(controls.right) then aMovement = aMovement + 1 end
 
-         movement:mul(400)
-         aMovement = aMovement * 20
+         movement:mul(600)
+         aMovement = aMovement * 30
 
          movement:rotateInplace(transform.rotation)
 
