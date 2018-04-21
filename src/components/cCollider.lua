@@ -1,10 +1,11 @@
 local Concord = require("lib.concord")
 
-local Collider = Concord.component(function(e, size, filter, response)
+local function none() end
+
+local Collider = Concord.component(function(e, size, response)
    e.size     = size or 5
    e.body     = nil
-   e.filter   = filter
-   e.response = response
+   e.response = response or none
 end)
 
 return Collider

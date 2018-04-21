@@ -25,6 +25,10 @@ function Input:update(dt)
          if love.keyboard.isDown(controls.left)  then aMovement = aMovement - 1 end
          if love.keyboard.isDown(controls.right) then aMovement = aMovement + 1 end
 
+         if love.keyboard.isDown(controls.shoot) then
+            
+         end
+
          movement:mul(600)
          aMovement = aMovement * 30
 

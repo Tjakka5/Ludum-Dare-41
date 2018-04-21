@@ -16,6 +16,7 @@ function Physics:entityAddedTo(e, pool)
       local collider  = e:get(C.collider)
 
       collider.body = self.world:circle(transform.position.x, transform.position.y, collider.size)
+      collider.body.parent = e
    end
 end
 
@@ -23,7 +24,7 @@ function Physics:entityRemovedFrom(e, pool)
    if pool.name == "colliding" then
       local collider = e:get(C.collider)
 
-      self.world:destroy(collider.body)
+      self.world:remove(collider.body)
    end
 end
 
@@ -59,9 +60,10 @@ function Physics:update(dt)
 
          local collisions = self.world:collisions(collider.body)
          for shape, delta in pairs(collisions) do
-            transform.position:add(delta.x, delta.y)
-            body.velocity = body.velocity:mirrorOn(Vector(-delta.y, -delta.x))
-            collider.body:move(delta.x, delta.y)
+            --transform.position:add(delta.x, delta.y)
+            --body.velocity = body.velocity:mirrorOn(Vector(-delta.y, -delta.x))
+            --collider.body:move(delta.x, delta.y)
+            collider.response(e, shape.parent)
          end
       end
    end

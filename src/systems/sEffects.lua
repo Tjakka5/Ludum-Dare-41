@@ -74,8 +74,8 @@ function Effects:toTerminal()
 
    self.flux.flux:to(self.paramBuffer, t, {
       opacity           = 1,
-      distortionFactorX = 1.2,
-      distortionFactorY = 1.3,
+      distortionFactorX = 1.06,
+      distortionFactorY = 1.065,
       x                 = 1.06,
       y                 = 1.065,
       feather           = 0.02,
