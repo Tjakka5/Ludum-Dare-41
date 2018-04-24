@@ -1,6 +1,6 @@
 local C = require("src.components")
 
-return function(e, o)
+return function(e, o, sep)
    local eDamager = e:get(C.damager)
 
    if eDamager then

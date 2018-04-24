@@ -29,8 +29,8 @@ function Input:update(dt)
             
          end
 
-         movement:mul(600)
-         aMovement = aMovement * 30
+         movement:mul(800)
+         aMovement = aMovement * 50
 
          movement:rotateInplace(transform.rotation)
 

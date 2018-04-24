@@ -1,5 +1,6 @@
 local PATH = (...):gsub('%.init$', '')
 
 return {
-   playerBullet = require(PATH..".playerBullet")
+   bounce       = require(PATH..".bounce"),
+   playerBullet = require(PATH..".playerBullet"),
 }

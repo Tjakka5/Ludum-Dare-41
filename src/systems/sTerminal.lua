@@ -4,57 +4,74 @@ local C = require("src.components")
 
 local Terminal = Concord.system({C.none})
 
+local function sort(a, b)
+   return a[1] < b[1]
+end
+
 function Terminal:init(effects)
    self.font   = love.graphics.newFont("assets/LCD_Solid.ttf", 30)
    self.buffer = ""
 
-   self.env = {
-      game = {
-         start = function()
-            print("We start game")
-         end,
-         registerKeys = function(up, down, left, right, shoot, openTerminal)
-            print("We register keys")
-         end, 
-      },
-      player = {
-         blink = function(x, y)
-            print("We blink")
-         end
-      },
-      print = function(msg)
-         self.buffer = msg
-      end,
-   }
-   self.docs = {
-      {name = "game.start", args = {}},
-      {name = "game.registerKeys", {"up", "down", "left", "right", "shoot", "openTerminal"}},
-      
-      {name = "player.blink", args = {"x", "y"}},
-      
-      {name = "print", args = {"msg"}},
+   self.environment = {
+      -- name, VALUE, fetch
+      -- name, METHOD, args, apply
+      -- name, AUTOCOMPLETE
+
+      {"player.", "autocomplete"},
+      {"player.blink", "method", {{"x", "number"}, {"y", "number"}}, function(x, y) print("Blink!") end},
+      {"player.boost", "method", {{"x", "number"}, {"y", "number"}}, function(x, y) print("Boost!") end},
+      {"player.xPos", "number", function() end},
+
+      {"game.", "autocomplete"},
+      {"game.start", "method", {}, function() print("Start!") end},
+
+      {"print", "method", {{"msg", "string"}}, function(msg) print(msg) end},
+      --{"for", "method", {{"i", "number"}}, function(i) print("do for") end},
    }
 
-   self.options          = {}
-   self.characterOptions = {}
-   self.selectedOption   = 1
+   table.sort(self.environment, sort)
+
+   self.current  = {}
+   self.expected = "method"
+   self.currArg  = 0
+
+   self.options = {}
+   self:getOptions()
+
+   self.selected = 1
 
    self.effects = effects
-
-   self:getOptions()
 end
 
-function Terminal:getCharacterOptions()
-   local options = {}
+function Terminal:isLegit(cmd)
+   for _, thing in ipairs(self.environment) do
+      if thing[2] == self.expected or thing[2] == "autocomplete" then
+         local name = thing[1]
+
+         local sub = name:sub(1, #cmd)
+
+         if sub == cmd then
+            return true
+         end
+      end
+   end
 end
 
 function Terminal:getOptions()
    self.options = {}
 
-   for _, option in ipairs(self.docs) do
-      local sub = option.name:sub(1, #self.buffer)
-      if sub == self.buffer then
-         self.options[#self.options+1] = option
+   for _, thing in ipairs(self.environment) do
+      print(thing[2], self.expected)
+      if thing[2] == self.expected or thing[2] == "autocomplete" then
+         local name = thing[1]
+
+         if #self.buffer ~= #name then
+            local sub = name:sub(1, #self.buffer)
+
+            if sub == self.buffer then
+               self.options[#self.options + 1] = thing 
+            end
+         end
       end
    end
 end
@@ -74,37 +91,65 @@ function Terminal:update(dt)
 end
 
 function Terminal:textinput(t)
-   self.buffer = self.buffer..t
-   self.selectedOption = 1
+   local nBuffer = self.buffer..t
 
-   self:getOptions()
+   if self:isLegit(nBuffer) then
+      self.buffer = nBuffer
+      self:getOptions()
+      self.selected = 1
+   end
 end
 
 function Terminal:keypressed(key)
    if key == "backspace" then
       if #self.buffer > 0 then
          self.buffer = self.buffer:sub(1, #self.buffer - 1)
-         self.selectedOption = 1
-      end
-   end
 
-   if key == "return" then
-      local f, loadErr = loadstring(self.buffer)
-      
-      if loadErr then
-         print(loadErr)
-      else
-         setfenv(f, self.env)
-         local succ, runErr = pcall(f)
-         
-         if not succ then
-            print(runErr)
+         self:getOptions()
+         self.selected = 1
+      end
+   elseif key == "up" then
+      if #self.options > 0 then
+         self.selected = self.selected - 1
+         if self.selected < 1 then
+            self.selected = #self.options
          end
       end
-   end
+   elseif key == "down" then
+      if #self.options > 0 then
+         self.selected = self.selected + 1
+         if self.selected > #self.options then
+            self.selected = 1
+         end
+      end
+   elseif key == "tab" then
+      if #self.options > 0 then
+         self.buffer = self.options[self.selected][1]
+         self:getOptions()
+         self.selected = 1
+      end
+   elseif key == "return" then
+      for _, thing in ipairs(self.environment) do
+         local name = thing[1]
+         if self.buffer == name then
+            if thing[2] ~= "autocomplete" then
+               self.current[#self.current + 1] = thing
+               self.buffer = ""
+               
+               if self.expected == "method" then
+                  self.expected = thing[3][1][2] -- what the hell
+      
 
-   if key == "return" or key == "esc" then
-
+                  self:getOptions()
+                  self.selected = 1
+               else
+                  
+               end
+            end
+            
+            break
+         end
+      end
    end
 end
 
@@ -117,13 +162,27 @@ function Terminal:draw()
    love.graphics.setColor(0, 0, 0, 0.75)
    love.graphics.rectangle("fill", x, y, w, h, 5)
 
-   local predict = ""
+   local pre  = ""
+   local args = ""
 
-   if self.options[self.selectedOption] then
-      predict = self.options[self.selectedOption].name
+   for i, thing in ipairs(self.current) do
+      pre = pre..thing[1].." "
+
+      if i == #self.current then
+         -- Do args
+      else
+         --pre = pre.." "
+      end
    end
 
-   local str = {{1, 1, 1, 1}, self.buffer, {0.35, 0.35, 0.35, 1}, predict}
+   local predict = ""
+   if #self.options > 0 then
+      local thing = self.options[self.selected]
+      local name  = thing[1]
+      predict = name:sub(#self.buffer + 1, #name)
+   end
+
+   local str = {{1, 1, 1, 1}, pre, {1, 1, 1, 1}, self.buffer, {0.35, 0.35, 0.35, 1}, predict}
 
    love.graphics.setColor(1, 1, 1, 1)
    love.graphics.setFont(self.font)

@@ -60,10 +60,7 @@ function Physics:update(dt)
 
          local collisions = self.world:collisions(collider.body)
          for shape, delta in pairs(collisions) do
-            --transform.position:add(delta.x, delta.y)
-            --body.velocity = body.velocity:mirrorOn(Vector(-delta.y, -delta.x))
-            --collider.body:move(delta.x, delta.y)
-            collider.response(e, shape.parent)
+            collider.response(e, shape.parent, delta)
          end
       end
    end

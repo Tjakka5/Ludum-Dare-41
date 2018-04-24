@@ -14,6 +14,7 @@ Concord.addInstance(Game)
 
 local C = require("src.components")
 local S = require("src.systems")
+local E = require("src.entities")
 
 local Shapes = require("src.objects.shapes")
 local collResponse = require("src.objects.collResponse")
@@ -27,7 +28,7 @@ local physics       = S.physics()
 local input         = S.input()
 local effects       = S.effects(globalFlux)
 local camera        = S.camera()
-local terminal      = S.terminal(effects)
+--local terminal      = S.terminal(effects)
 
 Game:addSystem(globalFlux, "update")
 Game:addSystem(gameFlux, "update")
@@ -48,29 +49,12 @@ Game:addSystem(camera, "draw", "detach")
 --Game:addSystem(terminal, "draw")
 Game:addSystem(effects, "draw", "detach")
 
-local player = Concord.entity()
-:give(C.transform, Vector(100, 100), 0, 1)
-:give(C.body, Vector(100, 0), 0.5, 500, 6)
-:give(C.controls)
-:give(C.collider, 5, collResponse.playerBullet)
-:give(C.shape, Shapes.ship_1)
-:give(C.player)
-:give(C.health)
-:give(C.damager)
-
-print(collResponse.playerBullet)
-
+local player = E.player(100, 100)
 Game:addEntity(player)
 
 camera.target = player
 
 for i = 1, 10 do
-   local a = Concord.entity()
-   :give(C.transform, Vector(100 + i * 40, -100), 0, 1)
-   :give(C.body, Vector(0, 300), love.math.random(), 50, 0)
-   :give(C.collider)
-   :give(C.shape, Shapes.node)
-   :give(C.health)
-
-   Game:addEntity(a)
+   local enemy = E.enemy(100 + i * 30, 200)
+   Game:addEntity(enemy)
 end
